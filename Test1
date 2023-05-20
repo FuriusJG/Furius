@@ -1,0 +1,85 @@
+local Viewer = {}
+
+function Viewer.new()
+  local self = {}
+
+  self.objects = {}
+
+  function self.addObject(object)
+    table.insert(self.objects, object)
+  end
+
+  function self.removeObject(object)
+    for i, v in pairs(self.objects) do
+      if v == object then
+        table.remove(self.objects, i)
+        break
+      end
+    end
+  end
+
+  function self.getObjects()
+    return self.objects
+  end
+
+  return self
+end
+
+local viewer = Viewer.new()
+
+-- Add all the objects in the game to the viewer
+for _, object in ipairs(game.Workspace:GetChildren()) do
+  viewer:addObject(object)
+end
+
+-- Create a GUI for the viewer
+local viewerGui = Instance.new("ScreenGui")
+viewerGui.Name = "Viewer"
+
+local viewerFrame = Instance.new("Frame")
+viewerFrame.Parent = viewerGui
+viewerFrame.Size = UDim2.new(0.4, 0, 0.4, 0)
+
+local viewerList = Instance.new("ScrollingFrame")
+viewerList.Parent = viewerFrame
+viewerList.Size = UDim2.new(1, 0, 0.8, 0)
+
+-- Add the objects to the viewer GUI
+for _, object in ipairs(viewer.objects) do
+  local objectLabel = Instance.new("TextLabel")
+  objectLabel.Parent = viewerList
+  objectLabel.Text = object.Name
+
+  local objectButton = Instance.new("TextButton")
+  objectButton.Parent = viewerList
+  objectButton.Text = "View Object"
+  objectButton.OnClicked:Connect(function()
+    -- Do something when the object button is clicked
+    local objectInfo = Instance.new("Frame")
+    objectInfo.Parent = viewerGui
+    objectInfo.Size = UDim2.new(0.4, 0, 0.4, 0)
+
+    local objectTypeLabel = Instance.new("TextLabel")
+    objectTypeLabel.Parent = objectInfo
+    objectTypeLabel.Text = "Object Type: " .. object.ClassName
+
+    local objectSizeLabel = Instance.new("TextLabel")
+    objectSizeLabel.Parent = objectInfo
+    objectSizeLabel.Text = "Object Size: " .. object.Size
+
+    local objectPositionLabel = Instance.new("TextLabel")
+    objectPositionLabel.Parent = objectInfo
+    objectPositionLabel.Text = "Object Position: " .. object.Position
+
+    local objectAnchorPointLabel = Instance.new("TextLabel")
+    objectAnchorPointLabel.Parent = objectInfo
+    objectAnchorPointLabel.Text = "Object Anchor Point: " .. object.AnchorPoint
+
+    local objectParentLabel = Instance.new("TextLabel")
+    objectParentLabel.Parent = objectInfo
+    objectParentLabel.Text = "Object Parent: " .. (object.Parent and object.Parent.Name or "None")
+  end)
+end
+
+-- Show the viewer GUI
+viewerGui.Parent = game.CoreGui
