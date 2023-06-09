@@ -37,7 +37,101 @@ end
 function findPathToPlayer(self, player)
     local path = PathfindingService:FindPath(self.Position, player.Position)
     if path ~= nil then
+        local shortestPath = {}function findNearestTorso(pos)
+    local list = game.Workspace:children()
+    local torso = nil
+    local dist = math.huge
+    for _, obj in pairs(list) do
+        if typeof(obj) == "Model" and obj ~= script.Parent then
+            local hrp = obj:FindFirstChildOfClass("HumanoidRootPart")
+            local humanoid = obj:FindFirstChildOfClass("Humanoid")
+            if hrp ~= nil and humanoid ~= nil and humanoid.Health > 0 then
+                local distToHrp = (hrp.Position - pos).Magnitude
+                if distToHrp < dist then
+                    dist = distToHrp
+                    torso = hrp
+                end
+            end
+        end
+    end
+    return torso
+end
+
+
+function dodgeObstacles(self)
+    local obstacles = workspace:GetChildren()
+    for _, obstacle in pairs(obstacles) do
+        if obstacle:IsA("Part") and obstacle.Parent ~= self then
+            local distance = (obstacle.Position - self.Position).Magnitude
+            if distance < 10 then
+                local direction = (obstacle.Position - self.Position).Unit
+                local newPosition = self.Position + direction * 10
+                self.Humanoid:MoveTo(newPosition)
+            end
+        end
+    end
+end
+
+
+function findPathToPlayer(self, player)
+    local path = PathfindingService:FindPath(self.Position, player.Position)
+    if path ~= nil then
         local shortestPath = {}
+        local currentPoint = self.Position
+        for _, point in pairs(path) do
+            if (point.Position - currentPoint).Magnitude > 10 then
+                shortestPath[#shortestPath + 1] = point
+                currentPoint = point
+            end
+        end
+        if #shortestPath > 0 then
+            for i = 1, #shortestPath - 1 do
+                self.Humanoid:MoveTo(shortestPath[i].Position)
+                wait(1)
+            end
+        end
+    end
+end
+
+
+function findBestAttack(self, player)
+    local attacks = self:GetAbilities()
+    local bestAttack = nil
+    local bestDamage = 0
+    for _, attack in pairs(attacks) do
+        local damage = attack.Damage
+        if damage > bestDamage then
+            bestDamage = damage
+            bestAttack = attack
+        end
+    end
+    return bestAttack
+end
+
+
+function attackPlayer(self, player)
+    local attack = findBestAttack(self)
+    if attack ~= nil then
+        attack:FireAt(player.Position)
+    end
+end
+
+
+while true do
+    wait(1)
+    local target = findNearestTorso(script.Parent.HumanoidRootPart.Position)
+    if target ~= nil and not target.Parent:FindFirstChild("NPC") then
+        local range = 50
+        if (target.Position - script.Parent.HumanoidRootPart.Position).Magnitude < range then
+            dodgeObstacles(script.Parent)
+            findPathToPlayer(script.Parent, target)
+            attackPlayer(script.Parent, target)
+        end
+    else
+        script.Parent.Humanoid:MoveTo(script.PartSu.Position, script.PartSu)
+    end
+end
+
         local currentPoint = self.Position
         for _, point in pairs(path) do
             if (point.Position - currentPoint).Magnitude > 10 then
